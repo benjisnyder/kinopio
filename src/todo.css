@@ -1,0 +1,75 @@
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace s "library://ns.adobe.com/flex/spark";
+mx|Button {
+	paddingRight:0;
+	paddingLeft:0;
+}
+
+.appContainer {
+	paddingBottom:10;
+}
+.todoDivider {
+	paddingTop:10;
+	paddingRight:10;
+	paddingLeft:10;
+}
+.h1 {
+	fontSize:20;
+}
+.h2 {
+	fontSize:16;
+}
+.h3 {
+	fontSize:12;
+	fontWeight:bold;
+}
+.todoList, .notes {
+	contentBackgroundAlpha: .85;
+}
+.addTodo {
+	paddingTop:10;
+	paddingRight:10;
+	paddingBottom:10;
+	paddingLeft:10;
+	backgroundColor:#f2fbff;
+}
+.todoHeader {
+	horizontalGap:3;
+}
+.todoBody {
+	borderColor:#ffffff;
+	borderThickness:1;
+	borderStyle:solid;
+	backgroundColor:#f2fbff;
+	paddingTop:5;
+	paddingRight:5;
+	paddingBottom:5;
+	paddingLeft:5;
+}
+.todoPri {
+	top:0;
+	left:0;
+	bottom:0;
+	verticalAlign:top;
+	textAlign:center;
+}
+.done {
+	backgroundColor:#f7f7f7;
+}
+.editPop {
+	paddingTop:5;
+	paddingRight:5;
+	paddingBottom:5;
+	paddingLeft:5;
+	backgroundColor:#E1F5FE;
+}
+.delete {
+	top:10;
+	right:10;
+}
+.btnNotes {
+	disabledSkin: Embed(source="kinopio.swf", symbol="transparent");
+	downSkin: Embed(source="kinopio.swf", symbol="btnNotes_over");
+	overSkin: Embed(source="kinopio.swf", symbol="btnNotes_over");
+	upSkin: Embed(source="kinopio.swf", symbol="transparent");
+}

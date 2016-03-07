@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init();" currentState="" layout="absolute" horizontalScrollPolicy="off" verticalScrollPolicy="off" xmlns:s="library://ns.adobe.com/flex/spark" width="400" height="560">
+	<mx:Script>
+		<![CDATA[
+			import components.TodoDataItem;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.ScrollPolicy;
+			import mx.events.CloseEvent;
+			import mx.events.CollectionEvent;
+			import mx.events.ItemClickEvent;
+			import mx.skins.halo.ButtonSkin;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var todoData:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var doneData:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var priLevels:ArrayCollection = new ArrayCollection(["Top", "None"]);
+			
+			private function init():void {
+				NativeApplication.nativeApplication.addEventListener(Event.EXITING, saveData);
+				
+				// Populate items stored in local storage
+				if ( EncryptedLocalStore.getItem( "todo_items" ) ) {
+					var todoBytes:ByteArray = EncryptedLocalStore.getItem( "todo_items" );
+					todoData = todoBytes.readObject() as ArrayCollection;
+				}
+				
+				if ( EncryptedLocalStore.getItem( "done_items" ) ) {
+					var doneBytes:ByteArray = EncryptedLocalStore.getItem( "done_items" );
+					doneData = doneBytes.readObject() as ArrayCollection;
+				}
+				
+				if ( EncryptedLocalStore.getItem( "note_items" ) ) {
+					var noteBytes:ByteArray = EncryptedLocalStore.getItem( "note_items" );
+					notes.text = noteBytes.readObject() as String;
+				}
+				
+				EncryptedLocalStore.reset();
+				
+				listTodo.addEventListener(ItemClickEvent.ITEM_CLICK, todoItemClick);
+				todoData.addEventListener(CollectionEvent.COLLECTION_CHANGE, saveData);
+				listDone.addEventListener(ItemClickEvent.ITEM_CLICK, doneItemClick);
+				listDone.addEventListener(CollectionEvent.COLLECTION_CHANGE, saveData);
+				listTodo.scroller.setStyle('horizontalScrollPolicy', ScrollPolicy.OFF);
+				listDone.scroller.setStyle('horizontalScrollPolicy', ScrollPolicy.OFF);
+				notes.addEventListener(Event.CHANGE, saveData);
+			}
+			
+			private function todoItemClick(e:ItemClickEvent):void {
+				if ( e.label != 'delete' ) {
+					e.target.data.done = true;
+					doneData.addItemAt(e.target.data, doneData.length);
+				}
+				for ( var i:int = 0; i <= todoData.length; i++ ) {
+					if ( todoData.getItemAt(i) == e.target.data ) {
+						todoData.removeItemAt(i);
+						return;
+					}
+				}
+			}
+			
+			private function doneItemClick(e:ItemClickEvent):void {
+				if ( e.label == 'undo' ) {
+					e.target.data.done = false;
+					todoData.addItemAt(e.target.data, todoData.length);
+					for ( var x:int = 0; x <= todoData.length; x++ ) {
+						if ( doneData.getItemAt(i) == e.target.data ) {
+							doneData.removeItemAt(i);
+							return;
+						}
+					}
+				} else {
+					for ( var i:int = 0; i <= doneData.length; i++ ) {
+						if ( doneData.getItemAt(i) == e.target.data ) {
+							doneData.removeItemAt(i);
+							return;
+						}
+					}
+				}
+			}
+			
+			private function setTodoItem( todoTitle:String, todoDesc:String ):void {
+				var index:int = todoData.length*cmbPri.selectedIndex.valueOf();
+				this.newTitle.text = 'Title';
+				this.newDesc.text = 'Description';
+				todoData.addItemAt(new TodoDataItem(todoTitle, todoDesc), todoData.length);
+			}
+			
+			private function clearItems( type:String ):void {
+				if ( todoData.length > 0 || doneData.length > 0 ) {
+					if ( type == 'all' ) {
+						Alert.show("Are you sure you want to CLEAR ALL Todo and Done items?", "Gettin' rid of somethin'?", Alert.OK | Alert.CANCEL, null, clearAllItems);					
+					} else if ( type == 'todo' ) {
+						Alert.show("Are you sure you want to CLEAR ALL Todo items?", "Gettin' rid of somethin'?", Alert.OK | Alert.CANCEL, null, clearAllTodoItems);
+					} else if ( type == 'done' ) {
+						Alert.show("Are you sure you want to CLEAR ALL Done items?", "Gettin' rid of somethin'?", Alert.OK | Alert.CANCEL, null, clearAllDoneItems);
+					}
+				} else {
+					Alert.show("You have nothing to clear.");
+				}
+			}
+			
+			private function clearAllItems(e:CloseEvent):void {
+				if ( e.detail == Alert.OK ) {
+					todoData.removeAll();
+					doneData.removeAll();
+				}
+			}
+			
+			private function clearAllTodoItems(e:CloseEvent):void {
+				if ( e.detail == Alert.OK ) {
+					todoData.removeAll();
+				}
+			}
+			
+			private function clearAllDoneItems(e:CloseEvent):void {
+				if ( e.detail == Alert.OK ) {
+					doneData.removeAll();
+				}
+			}
+			
+			private function saveData( e:Event ):void {
+				if ( todoData.length > 0 ) {
+					var todoBytes:ByteArray = new ByteArray();
+					todoBytes.writeObject(todoData);
+					EncryptedLocalStore.setItem( "todo_items", todoBytes );
+				}
+				if ( doneData.length > 0 ) {
+					var doneBytes:ByteArray = new ByteArray();
+					doneBytes.writeObject(doneData);
+					EncryptedLocalStore.setItem( "done_items", doneBytes );
+				}
+				var noteBytes:ByteArray = new ByteArray();
+				noteBytes.writeObject(notes.text);
+				EncryptedLocalStore.setItem( "note_items", noteBytes );
+			}
+			
+			private function toggleNotes():void {
+				if ( this.currentState == 'notes' ) {
+					this.currentState = '';
+				} else {
+					this.currentState = 'notes';
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="notes" basedOn="" >
+			<mx:SetProperty target="lists" name="visible" value="false" />
+			<mx:SetProperty target="lists" name="includeInLayout" value="false" />
+			<mx:SetProperty target="notes" name="visible" value="true" />
+			<mx:SetProperty target="notes" name="includeInLayout" value="true" />
+			<mx:SetProperty target="btnNotes" name="label" value="-" />
+		</mx:State>
+	</mx:states>
+	<mx:Style source="todo.css" />
+	<mx:Image source="@Embed(source='icons/toad_huge.png')" verticalCenter="0" horizontalCenter="0" alpha=".2" />
+	<mx:Button id="btnNotes" styleName="btnNotes" width="10" height="100%" top="0" right="0" label="+" click="toggleNotes();" skin="{mx.skins.halo.ButtonSkin}" />
+	<mx:VBox id="lists" styleName="appContainer" width="100%" height="100%" horizontalScrollPolicy="off" verticalScrollPolicy="off" horizontalAlign="right" >
+		<mx:Canvas width="100%" includeInLayout="{addTodo.visible}">
+			<mx:VBox id="addTodo" styleName="addTodo" width="100%" visible="false" includeInLayout="{addTodo.visible}">
+				<mx:TextInput id="newTitle" width="75%" text="Title" />
+				<mx:TextArea id="newDesc" width="100%" height="100" text="Description" />
+				<mx:HBox>
+					<mx:ComboBox id="cmbPri" dataProvider="{priLevels}" />
+					<mx:Button label="Create" click="setTodoItem(newTitle.text, newDesc.text)" />					
+				</mx:HBox>
+			</mx:VBox>
+			<mx:HRule shadowColor="#999999" strokeColor="#999999" width="100%" height="1" bottom="0" visible="{addTodo.visible}" />
+			<mx:Button label="{addTodo.visible ? '-' : '+'}" width="20" height="20" click="{addTodo.visible = !addTodo.visible}" top="10" right="10" />
+		</mx:Canvas>
+		<mx:DividedBox styleName="todoDivider" width="100%" height="100%" liveDragging="true">
+			<mx:Canvas id="todo" width="100%" height="100%" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+				<mx:Text styleName="h2" text="{'Todo (' + todoData.length + '):'}" />
+				<s:List id="listTodo" styleName="todoList" itemRenderer="TodoItem" dataProvider="{todoData}" top="25" width="100%" height="{todo.height-25}" dragEnabled="true" dropEnabled="true" allowMultipleSelection="true" dragMoveEnabled="true" />
+			</mx:Canvas>
+			<mx:Canvas id="done" width="100%" height="100%" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+				<mx:Text styleName="h2" text="{'Done (' + doneData.length + '):'}" />
+				<s:List id="listDone" styleName="todoList" itemRenderer="TodoItem" dataProvider="{doneData}" top="25" width="100%" height="{done.height-25}" />				
+			</mx:Canvas>
+		</mx:DividedBox>
+		<mx:HBox width="100%" height="22" horizontalAlign="center">
+			<mx:Button label="Clear Todo" click="clearItems('todo');" />
+			<mx:Button label="Clear Done" click="clearItems('done');" />
+			<mx:Button label="Clear All" click="clearItems('all');" />	
+		</mx:HBox>
+	</mx:VBox>
+	<mx:TextArea id="notes" styleName="notes" width="{this.width}" height="{this.height}" text="Notes" top="10" right="10" bottom="10" left="10" visible="false" includeInLayout="false" />
+</mx:WindowedApplication>

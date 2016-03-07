@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="false" width="100%">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.ItemClickEvent;
+			
+			protected function markDone(event:MouseEvent, type:String = 'done'):void {
+				var e:ItemClickEvent = new ItemClickEvent(ItemClickEvent.ITEM_CLICK, true);
+				e.item = data;
+				e.index = itemIndex;
+				e.label = type; 
+				dispatchEvent(e);
+			}
+			
+			private function editItem():void {
+				this.edit.visible = true;
+			}
+			
+			private function saveNewData():void {
+				this.data.title = this.newTitle.text;
+				this.data.desc = this.newDesc.text;
+				this.percentWidth = 100;
+				this.edit.visible = false;
+			}
+			
+			private function cancelSaveData():void {
+				this.edit.visible = false;
+			}
+		]]>
+	</fx:Script>
+	<mx:VBox styleName="{'todoBody' + (data.done ? ' done' : '')}" width="100%">
+		<mx:HBox width="100%" styleName="todoHeader">
+			<mx:Label id="itemTitle" styleName="h3" text="{description.visible ? '[-] ' + data.title : '[+] ' + data.title}" width="{this.width - 105}" truncateToFit="true" click="{description.visible = !description.visible;}" useHandCursor="true" buttonMode="true" mouseChildren="false" />
+			<mx:Spacer width="100%" />
+			<mx:Button label="^" toolTip="Send to Todo" click="{markDone(event, 'undo')}" width="20" height="20" visible="{data.done}" includeInLayout="{data.done}" />
+			<mx:Button styleName="button" toolTip="Mark Item Done" label="Done!" click="{markDone(event)}" height="20" width="48" visible="{!data.done}" includeInLayout="{!data.done}" />
+			<mx:Button styleName="button" toolTip="Delete Item" label="X" click="{markDone(event, 'delete')}" height="20" width="20" />
+		</mx:HBox>
+		<mx:Text id="description" htmlText="{data.desc + ' (&lt;font color=&quot;#0000ff&quot;&gt;edit&lt;/font&gt;)'}" width="100%" visible="false" includeInLayout="{description.visible}" click="{editItem()}" useHandCursor="true" buttonMode="true" mouseChildren="false" />
+	</mx:VBox>
+	<mx:VBox id="edit" styleName="editPop" width="100%" height="100%" minHeight="{this.height}" visible="false" includeInLayout="{edit.visible}">
+		<mx:TextInput id="newTitle" text="{data.title}" width="75%" />
+		<mx:TextArea id="newDesc" text="{data.desc}" width="100%" height="100%" />
+		<mx:HBox width="100%">
+			<mx:Button label="Save" click="saveNewData()" width="40" />
+			<mx:Button label="Cancel" click="cancelSaveData()" width="50" />
+		</mx:HBox>
+	</mx:VBox>
+	<mx:HRule shadowColor="#999999" strokeColor="#999999" width="100%" height="1" bottom="0" />
+	<!--mx:Button styleName="delete" label="x" width="20" height="20" /-->
+</s:ItemRenderer>
